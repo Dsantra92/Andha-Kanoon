@@ -2,7 +2,7 @@ using HTTP
 using Gumbo
 using Cascadia
 
-
+# Retunrs the link for each Court
 function get_court_links() :: Vector{String}
     base_url = "https://indiankanoon.org"
     path = "/browse"
@@ -21,35 +21,40 @@ function get_court_links() :: Vector{String}
 
     # Combine the url for a complete link
     complete_links = base_url .* links
-    
     return complete_links
 end
 
-# Returns the first year for which records are available
-function get_starting_year(url:: String) :: String
+# Returns the first year for which records are available for one court link
+function get_starting_year(url:: String):: String
     r = HTTP.get(url)
     doc = parsehtml(String(r.body))
-    
+
     # Even though it is the only table, we need the 
     # element not a vector
     table = eachmatch(Selector("table"), doc.root)[1]
-    
+
     sel = "[href#=(/browse/*)]"
-
     hrefs = eachmatch(Selector(sel), table)
-    year_links = getattr.(hrefs, "href")[1]
+    # Number of entries can be none, for eg: Lucknow
+    isempty(hrefs) && return "-1"  # Return value is subject to change
 
-    return splitpath(year_links)[end]
+    first_year_link = getattr.(hrefs, "href")[1]
+    # Number can be easy choice, but we are sending string queries at the end.
+    return splitpath(first_year_link)[end]
 end
 
-function courtname_with_start_year()::Vector(String)
+# Get all Court codes with their starting year in string
+function courtname_with_start_year()::Dict{String, String}
     court_links = get_court_links()
-    years = get_starting_year.(court_links)
+    years = Vector{String}(undef, length(court_links))
+    @sync for (i, court_link) in enumerate(court_links)
+        @async years[i] = get_starting_year(court_link)
+    end
 
     court_year = Dict{String, String}()
     for (link, year) in zip(court_links, years)
         court_name = splitpath(link)[end]
-        court_year[courtname] = year
+        court_year[court_name] = year
     end
     return court_year
 end
