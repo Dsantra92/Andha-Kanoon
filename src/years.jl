@@ -1,14 +1,16 @@
 using HTTP
 using Gumbo
 using Cascadia
+include("utils.jl")
 
+# The base url, which is used again and again
+BASE_URL = "https://indiankanoon.org"
 
-# Retunrs the link for each Court
-function get_court_links() :: Vector{String}
-    base_url = "https://indiankanoon.org"
+# Returns the link for each Court
+function all_court_urls():: Vector{String}
+
     path = "/browse"
-    r = HTTP.get(base_url * path)
-    doc = parsehtml(String(r.body))
+    doc = get_html(BASE_URL * path)
 
     # Get the first table
     table1 = eachmatch(Selector("table"), doc.root)[1]
@@ -17,47 +19,49 @@ function get_court_links() :: Vector{String}
     sel = "[href#=(/browse/*)]"
 
     hrefs = eachmatch(Selector(sel), table1)
-    links = getattr.(hrefs, "href")
+    court_path_urls = getattr.(hrefs, "href")
 
-    # Combine the url for a complete link
-    complete_links = base_url .* links
-    return complete_links
+    # Add with the base url for a complete link
+    complete_urls = BASE_URL .* court_path_urls
+    return complete_urls
 end
 
 
-# Returns the first year for which records are available for one court link
-function get_starting_year(url:: String):: String
-    r = HTTP.get(url)
-    doc = parsehtml(String(r.body))
+# Returns the years for each court. Each year is important because
+# the years are surprisingly sparse.
+function years_for_court(court_url:: String):: Vector{String}
+    BASE_URL = "https://indiankanoon.org"
+    doc = get_html(court_url)
 
-    # Even though it is the only table, we need the
-    # element not a vector
+    # We need the only table present
     table = only(eachmatch(Selector("table"), doc.root))
 
     sel = "[href#=(/browse/*)]"
     hrefs = eachmatch(Selector(sel), table)
-    # Number of entries can be none, for eg: Lucknow
-    isempty(hrefs) && return "-1"  # Return value is subject to change
 
-    first_year_link = getattr(hrefs[1], "href")
+    # Number of entries can be 0, for eg: Lucknow
+    isempty(hrefs) && return ["-1"]  # Return value is subject to change
+
+    court_year_urls = getattr.(hrefs, "href")
+    years = getindex.(splitpath.(court_year_urls), 4)
     # Number can be easy choice, but we are sending string queries at the end.
-    return splitpath(first_year_link)[end]
+    return years
 end
 
 
 # Get all Court codes with their starting year in string
-function court_id_with_start_year()::Dict{String, String}
-    court_links = get_court_links()
-    years = Vector{String}(undef, length(court_links))
+function all_court_id_with_years()
+    court_urls = all_court_urls()
+    years = Vector{Vector{String}}(undef, length(court_urls))
 
-    @sync for (i, court_link) in enumerate(court_links)
-        @async years[i] = get_starting_year(court_link)
+    @sync for (i, court_url) in enumerate(court_urls)
+        @async years[i] = years_for_court(court_url)
     end
 
     # Splitting a link will give exactly 4 values
     # last one is the court id
-    court_ids = getindex.(splitpath.(a), 4)
-    court_id_with_start_year = Dict(court_ids .=> years)
+    court_ids = getindex.(splitpath.(court_urls), 4)
+    court_id_to_years = Dict(court_ids .=> years)
 
-    return court_id_with_start_year
+    return court_id_to_years
 end
