@@ -58,6 +58,8 @@ juila> download_all_pdf_for_all_courts()
 
 ## Problems
 
+Not extremely user-friendly, but I will continue to rewrite parts of the code in the future.
+
 ## Further developments
 
 - [ ] Integrate PDFIO.jl to read PDFs.

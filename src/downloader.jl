@@ -110,7 +110,7 @@ function download_pdfs(court_id::String, date1::Date, date2::Date)
     end
 end
 
-function download_all_pdfs(court_id::String, year::String)
+function download_all_pdfs_for_a_year(court_id::String, year::String)
     date1 = Date(year, "y")
     date2 = Dates.lastdayofyear(date1)
     download_pdfs(court_id, date1, date2)
