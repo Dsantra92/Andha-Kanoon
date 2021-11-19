@@ -75,10 +75,10 @@ Download all pdfs after a optmizied query.
 """
 function download_pdfs_for_optmized_query(query::String, results::Int)
     pages = Int(ceil(results / 10))
-    for i in range(0, pages-1)
+    @async for i in range(0, pages-1)
         query_url = query * "&pagenum=$(i)"
         # println(query_url)
-        download_all_pdfs(query_url)
+        @sync download_all_pdfs(query_url)
     end
     return nothing
 end
@@ -89,6 +89,7 @@ Optmiize and download all pdfs for a given query.
 function download_pdfs(court_id::String, date1::Date, date2::Date)
     query = generate_query_string(court_id, date1, date2)
     doc = get_html(query)
+    println(query)
     n_results = get_number_of_results_for_query(doc)
     # println("$(Dates.format(date1, "d-m-Y")) and $(Dates.format(date2, "d-m-Y"))")
     # println("Results = $(n_results)")
@@ -98,16 +99,22 @@ function download_pdfs(court_id::String, date1::Date, date2::Date)
         if date1 == date2
             datestring = Dates.format(date1, "d-m-Y")
             @warn "No of results for $(datestring) is $(n_results) which exceeds 400. The most relevant 400 cases are downloaded."
-            return download_optmized_query(query, 400)
+            open("re-download.txt", "a") do file
+                write(file, query, '\n')
+                close(file)
+            end
+            # return download_optmized_query(query, 400)
+            return 
         end
 
         opt_dates = get_sub_optimal_dates(date1, date2, n_results)
-        @sync for opt_date in opt_dates
+        for opt_date in opt_dates
             # println("$(Dates.format(opt_date[1], "d-m-Y")) and $(Dates.format(opt_date[2], "d-m-Y"))")
-            @async download_pdfs(court_id, opt_date[1], opt_date[2])
+            download_pdfs(court_id, opt_date[1], opt_date[2])
         end
     else
-        return download_pdfs_for_optmized_query(query, n_results)
+        # return download_pdfs_for_optmized_query(query, n_results)
+        return
     end
 end
 

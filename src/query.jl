@@ -32,6 +32,9 @@ Returns the actual number of results from the query result.
 """
 function get_number_of_results_for_query(html_query_page:: HTMLDocument)::Int
     query_info = nodeText(eachmatch(Selector("b"), html_query_page.root)[1])
+    if query_info == "No matching results"
+        return 0
+    end
 
     no_of_results = parse(Int, split(query_info, " ")[5])
     return no_of_results
