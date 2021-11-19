@@ -1,16 +1,21 @@
+module years
+
+export all_court_id_with_years
+
 using HTTP
 using Gumbo
 using Cascadia
 include("utils.jl")
 
-# The base url, which is used again and again
-BASE_URL = "https://indiankanoon.org"
+"""
+Returns the a vector of urls. Each url points to a court page listing the years for
+which records are available for that court.
+"""
+function all_court_urls()::Vector{String}
 
-# Returns the link for each Court
-function all_court_urls():: Vector{String}
-
+    base_url = "https://indiankanoon.org"
     path = "/browse"
-    doc = get_html(BASE_URL * path)
+    doc = get_html(base_url * path)
 
     # Get the first table
     table1 = eachmatch(Selector("table"), doc.root)[1]
@@ -22,15 +27,14 @@ function all_court_urls():: Vector{String}
     court_path_urls = getattr.(hrefs, "href")
 
     # Add with the base url for a complete link
-    complete_urls = BASE_URL .* court_path_urls
+    complete_urls = base_url .* court_path_urls
     return complete_urls
 end
 
-
-# Returns the years for each court. Each year is important because
-# the years are surprisingly sparse.
+"""
+Returns the years for which records are available for a given court url.
+"""
 function years_for_court(court_url:: String):: Vector{String}
-    BASE_URL = "https://indiankanoon.org"
     doc = get_html(court_url)
 
     # We need the only table present
@@ -40,7 +44,7 @@ function years_for_court(court_url:: String):: Vector{String}
     hrefs = eachmatch(Selector(sel), table)
 
     # Number of entries can be 0, for eg: Lucknow
-    isempty(hrefs) && return ["-1"]  # Return value is subject to change
+    isempty(hrefs) && return []  # Return value is subject to change
 
     court_year_urls = getattr.(hrefs, "href")
     years = getindex.(splitpath.(court_year_urls), 4)
@@ -49,8 +53,10 @@ function years_for_court(court_url:: String):: Vector{String}
 end
 
 
-# Get all Court codes with their starting year in string
-function all_court_id_with_years()
+"""
+Returns a dict of all court_id pointing to a vector of years for which records are available.
+"""
+function all_court_id_with_years()::Dict{String, Vector{String}}
     court_urls = all_court_urls()
     years = Vector{Vector{String}}(undef, length(court_urls))
 
@@ -64,4 +70,6 @@ function all_court_id_with_years()
     court_id_to_years = Dict(court_ids .=> years)
 
     return court_id_to_years
+end
+
 end
