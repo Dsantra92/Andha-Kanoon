@@ -18,27 +18,28 @@ Python is easily one of the best choices we have for data-scraping. [Beautiful S
 ## Setting Up
 
 1. Download and set up [Julia](https://julialang.org/).
-```console
-mkdir -p ~/julia-1.6.3
+```bash
+mkdir -p ~/julia-1.7.0-rc
 
-wget https://julialang-s3.julialang.org/bin/linux/x64/1.5/julia-1.6.3-linux-x86_64.tar.gz\
+wget https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.7.0-rc3-linux-x86_64.tar.gz\
         -O /tmp/julia.tar.gz
 
-tar -xvzf /tmp/julia.tar.gz -C ~/julia-1.6.3 --strip-components 1
+tar -xvzf /tmp/julia.tar.gz -C ~/julia-1.7.0-rc --strip-components 1
 
 ## Set up a symbolic link
-ln -s ~/julia-1.6.3/bin/julia /usr/local/bin/
+sudo rm /usr/local/bin/julia
+sudo ln -s ~/julia-1.7.0-rc/bin/julia /usr/local/bin/
 
 ```
 You should be able to use the `julia` command without any further configuration.
 
 2. Clone the repo.
-```console
+```bash
 git clone git@github.com:Dsantra92/Andha-Kanoon.git
 cd Andha-Kanoon
 ```
 3. Set up the packages.
-```console
+```bash
 ## Open the Julia REPL and press ] 
 (@v1.6) pkg> activate .
 (@v1.6) pkg> instantiate
