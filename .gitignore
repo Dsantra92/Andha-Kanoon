@@ -24,4 +24,5 @@ docs/site/
 Manifest.toml
 
 .vscode
-*pdf
+*.pdf
+*.txt

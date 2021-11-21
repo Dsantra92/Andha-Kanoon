@@ -2,14 +2,11 @@ module query
 
 export generate_query_string, get_number_of_results_for_query, get_sub_optimal_dates
 
-include("years.jl")
 include("utils.jl")
-
 using HTTP
 using Gumbo
 using Cascadia
 using Dates
-using .years
 
 
 """
