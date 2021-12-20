@@ -19,18 +19,19 @@ Python is easily one of the best choices we have for data-scraping. [Beautiful S
 
 1. Download and set up [Julia](https://julialang.org/).
 ```bash
-mkdir -p ~/julia-1.7.0-rc
+mkdir -p ~/julia-1.7.0
 
-wget https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.7.0-rc3-linux-x86_64.tar.gz\
+wget https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.7.0-linux-x86_64.tar.gz\
         -O /tmp/julia.tar.gz
 
-tar -xvzf /tmp/julia.tar.gz -C ~/julia-1.7.0-rc --strip-components 1
+tar -xvzf /tmp/julia.tar.gz -C ~/julia-1.7.0 --strip-components 1
 
 ## Set up a symbolic link
-sudo rm /usr/local/bin/julia
-sudo ln -s ~/julia-1.7.0-rc/bin/julia /usr/local/bin/
+# sudo rm /usr/local/bin/julia
+sudo ln -s ~/julia-1.7.0/bin/julia /usr/local/bin/
 
 ```
+
 You should be able to use the `julia` command without any further configuration.
 
 2. Clone the repo.
@@ -38,17 +39,31 @@ You should be able to use the `julia` command without any further configuration.
 git clone git@github.com:Dsantra92/Andha-Kanoon.git
 cd Andha-Kanoon
 ```
+
 3. Set up the packages.
 ```bash
 ## Open the Julia REPL and press ] 
-(@v1.6) pkg> activate .
-(@v1.6) pkg> instantiate
+(@v1.7) pkg> activate .
+(@v1.7) pkg> instantiate
 ```
 
-4. Run the code.
+4. To download all pdfs run the code.
 ```julia
 julia> include("src/main.jl")
 juila> download_all_pdf_for_all_courts()
+```
+
+5. To download all documents from 2012 to 2021.
+```julia
+julia> include("src/main.jl")
+juila> download_all_docs(2012, 2021)
+```
+
+6. To download 20 sample documents from 2020 to 2021 for sumpreme-court.
+```julia
+julia> include("src/sampler.jl")
+julia> using .sampler
+julia> download_sample_court_docs("supremecourt", "2020", "2021", 20)
 ```
 
 ## What makes this data extraction a bit special?
@@ -63,10 +78,10 @@ Not extremely user-friendly, but I will continue to rewrite parts of the code in
 
 ## Further developments
 
-- [ ] Integrate PDFIO.jl to read PDFs.
-- [ ] Make the code more scaleable and play with some `async` and `threads`.
+- [x] Integrate PDFIO.jl to read PDFs.
+- [x] Make the code more scaleable and play with some `async` and `threads`.
 - [ ] Make the proper API for extensive searching.
-- [ ] More optimized and robust data scraping algorithm.
+- [x] More optimized and robust data scraping algorithm.
 - [ ] A proper documentation.
 
 

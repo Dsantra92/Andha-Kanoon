@@ -68,7 +68,9 @@ function download_doc_as_txt(doc_url::String; verbose::Bool=true, folder::String
     filepath = download_doc_as_pdf(doc_url, redownload=true)
     if isfile(filepath)
         outpath = convert_pdf_to_txt(filepath, folder)
-        # rm(filepath) # Remove the pdf file
+        
+        rm(filepath) # Remove the pdf file
+
         if verbose
             println(Crayon(foreground=:red, bold=true), "[+] Downloaded: ", Crayon(foreground=:cyan, bold=false), outpath)
         end
@@ -113,7 +115,7 @@ end
 Download all pdfs after a optmizied query. Does (should) not download more than 400 pdfs per call.
 """
 function download_docs_for_optmized_query(query::String, results::Int)
-    pages = Int(ceil(results / 10))
+    pages = ceil(Int, results / 10)
     @sync for i in range(0, pages-1)
         query_url = query * "&pagenum=$(i)"
         @async download_docs(query_url)
@@ -137,13 +139,13 @@ function download_least_recent_docs(queries::Vector{String})
 end
 
 function download_remaining_docs(queries::Vector{String})
-    download_least_recent_pdfs(queries)
-    donload_most_recent_pdfs(queries)
+    download_least_recent_docs(queries)
+    donload_most_recent_docs(queries)
 end
 
 function download_remaining_docs(filename::String)
     queries = readlines(filename)
-    download_remaining_pdfs(queries)
+    download_remaining_docs(queries)
     rm(filename)  # Delete the file after downloading
 end
 
@@ -169,8 +171,7 @@ function download_docs(court_id::String, date1::Date, date2::Date)
                 write(file, query, '\n')
                 close(file)
             end
-            # return download_optmized_query(query, 400)
-            return
+            return download_optmized_query(query, 400)
         end
 
         opt_dates = get_sub_optimal_dates(date1, date2, n_results)
@@ -179,7 +180,7 @@ function download_docs(court_id::String, date1::Date, date2::Date)
             download_docs(court_id, opt_date[1], opt_date[2])
         end
     else
-        return download_docs_for_optmized_query(query, n_results)
+        return download_docs_for_optmized_query(query, min(1, n_results))
     end
     download_remaining_docs(re_download_file)
 end
