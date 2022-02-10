@@ -64,6 +64,7 @@ function download_random_docs(doc_urls::Vector{String}, n::Int, folder::String)
         @warn "Population size is less than or equal to sample space."
         n = length(doc_urls)
     end
+    # n = Int(ceil(1.30 * n))
     random_urls = shuffle(doc_urls)[1:n]
     download_docs(random_urls, folder)
     return nothing
@@ -72,7 +73,9 @@ end
 
 function download_sample_court_docs(court_id::String, start_date::Date, end_date::Date, n::Int)
     doc_urls = get_doc_urls(court_id, start_date, end_date)
-    download_random_docs(doc_urls, n, mktempdir("Samples";prefix="$(court_id)_", cleanup=false))
+    temp_dir = mktempdir("Samples";prefix="$(court_id)_$(n)_", cleanup=false)
+    download_random_docs(doc_urls, n, temp_dir)
+    # TO DO: Print the number of docs downloaded
 end
 
 function download_sample_court_docs(court_id::String, start_year::String, end_year::String, n::Int)
