@@ -49,14 +49,23 @@ function download_doc_as_pdf(pdf_url::String; verbose::Bool=false, redownload::B
 
     # Download the file
     headers = ["Content-Type"=> "application/x-www-form-urlencoded"]
-    r = HTTP.post(pdf_url, headers,["type=pdf"])
-
+    r = try
+          HTTP.post(pdf_url, headers,["type=pdf"])
+        catch e
+          if isa(e, HTTP.Parsers.ParseError) 
+            @warn pdf_url * " cannot not be downloaded due to some internal issues"
+            return ""
+          end
+        end
+    if r==""
+      return ""
+    end
     open(filepath, "w") do pdf
         write(pdf, r.body)
         close(pdf)  # Closing is important
     end
     if verbose
-        println(Crayon(foreground=:red, bold=true), "[+] Downloaded: ", Crayon(foreground=:cyan, bold=false), out_path)
+        println(Crayon(foreground=:red, bold=true), "[+] Downloaded: ", Crayon(foreground=:cyan, bold=false), filepath)
     end
     return filepath
 end
@@ -66,9 +75,12 @@ Download the doc as txt given the url of the doc.
 """
 function download_doc_as_txt(doc_url::String; verbose::Bool=true, folder::String="txts")
     filepath = download_doc_as_pdf(doc_url, redownload=true)
+    if filepath == ""
+      return
+    end
     if isfile(filepath)
         outpath = convert_pdf_to_txt(filepath, folder)
-        
+
         rm(filepath) # Remove the pdf file
 
         if verbose
